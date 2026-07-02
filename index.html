@@ -36,10 +36,23 @@ body.loading{overflow:hidden}
 .loader-num{font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:rgba(255,255,255,0.35);letter-spacing:0.15em;display:flex;justify-content:space-between}
 
 /* ========== CURSOR ========== */
-canvas#spark-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999}
 .custom-cursor{position:fixed;width:10px;height:10px;background:#fff;border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:transform 0.15s ease,width 0.2s,height 0.2s}
 .cursor-ring{position:fixed;width:38px;height:38px;border:1px solid rgba(255,255,255,0.25);border-radius:50%;pointer-events:none;z-index:9997;transform:translate(-50%,-50%);transition:left 0.13s ease,top 0.13s ease,width 0.2s,height 0.2s,border-color 0.2s}
 .cursor-ring.hovered{width:58px;height:58px;border-color:rgba(255,255,255,0.5)}
+.sparkle-renderer{position:fixed;inset:0;pointer-events:none;z-index:9999}
+.sparkle-particle{position:absolute;animation:sparkleBurst 0.8s cubic-bezier(0.22,1,0.36,1) forwards}
+.sparkle-container{position:relative;transform:translate(-50%,-50%)}
+.sparkle{position:absolute;width:16px;height:16px;left:50%;top:50%;margin-left:-8px;margin-top:-8px;opacity:.8;transform-origin:center}
+.sparkle-0{transform:rotate(0deg) translateY(-12px)}
+.sparkle-45{transform:rotate(45deg) translateY(-12px)}
+.sparkle-90{transform:rotate(90deg) translateY(-12px)}
+.sparkle-135{transform:rotate(135deg) translateY(-12px)}
+.sparkle-180{transform:rotate(180deg) translateY(-12px)}
+.sparkle-225{transform:rotate(225deg) translateY(-12px)}
+.sparkle-270{transform:rotate(270deg) translateY(-12px)}
+.sparkle-315{transform:rotate(315deg) translateY(-12px)}
+.sparkle-center{position:absolute;left:50%;top:50%;width:8px;height:8px;transform:translate(-50%,-50%);border-radius:50%;background:#F9F5EC;box-shadow:0 0 12px rgba(249,245,236,.8)}
+@keyframes sparkleBurst{0%{opacity:0;transform:scale(.35)}20%{opacity:1;transform:scale(.9)}100%{opacity:0;transform:scale(1.15)}}
 
 /* ========== PAGE TRANSITION ========== */
 #page-transition{position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,0);pointer-events:none;transition:background 0.3s ease}
@@ -373,7 +386,7 @@ body::-webkit-scrollbar,html::-webkit-scrollbar{width:0;height:0}
 </div>
 
 <div id="page-transition"></div>
-<canvas id="spark-canvas"></canvas>
+<div class="sparkle-renderer" id="sparkle-renderer"></div>
 <div class="custom-cursor" id="cursor"></div>
 <div class="cursor-ring" id="cursor-ring"></div>
 <canvas id="bg-canvas"></canvas>
@@ -774,17 +787,46 @@ document.querySelectorAll('a,button,.orbit-3d-host,.stat-card,.skill-tag,.faq-ch
 });
 
 /* ============================================================
-   CLICK SPARKS
+   CLICK SPARKLES
    ============================================================ */
-const sc=document.getElementById('spark-canvas'),sctx=sc.getContext('2d');
-sc.width=window.innerWidth;sc.height=window.innerHeight;
-window.addEventListener('resize',()=>{sc.width=window.innerWidth;sc.height=window.innerHeight});
-const sparks=[];
-document.addEventListener('click',e=>{for(let i=0;i<16;i++)sparks.push({x:e.clientX,y:e.clientY,angle:(2*Math.PI*i)/16+(Math.random()-0.5)*0.3,life:500+Math.random()*200,col:Math.random()>0.5?'77,240,197':'255,255,255'})});
-(function drawSparks(ts){
-  requestAnimationFrame(drawSparks);sctx.clearRect(0,0,sc.width,sc.height);
-  for(let i=sparks.length-1;i>=0;i--){const s=sparks[i];if(!s.st)s.st=ts;const el=(ts-s.st)/s.life;if(el>=1){sparks.splice(i,1);continue}const dist=el*42,len=11*(1-el);sctx.strokeStyle=`rgba(${s.col},${(1-el)*0.65})`;sctx.lineWidth=1.4;sctx.beginPath();sctx.moveTo(s.x+dist*Math.cos(s.angle),s.y+dist*Math.sin(s.angle));sctx.lineTo(s.x+(dist+len)*Math.cos(s.angle),s.y+(dist+len)*Math.sin(s.angle));sctx.stroke()}
-})(0);
+const sparkleRenderer=document.getElementById('sparkle-renderer');
+function createSparkle(x,y){
+  const particle=document.createElement('div');
+  particle.className='sparkle-particle';
+  particle.style.left=x+'px';
+  particle.style.top=y+'px';
+  particle.innerHTML=`
+    <div class="sparkle-container">
+      <svg class="sparkle sparkle-0" viewBox="0 0 24 24" fill="none">
+        <path d="M12 3L13.8 8.2L19 10L13.8 11.8L12 17L10.2 11.8L5 10L10.2 8.2L12 3Z" fill="#F9F5EC"/>
+      </svg>
+      <svg class="sparkle sparkle-45" viewBox="0 0 24 24" fill="none">
+        <path d="M12 3L13.8 8.2L19 10L13.8 11.8L12 17L10.2 11.8L5 10L10.2 8.2L12 3Z" fill="#F9F5EC"/>
+      </svg>
+      <svg class="sparkle sparkle-90" viewBox="0 0 24 24" fill="none">
+        <path d="M12 3L13.8 8.2L19 10L13.8 11.8L12 17L10.2 11.8L5 10L10.2 8.2L12 3Z" fill="#F9F5EC"/>
+      </svg>
+      <svg class="sparkle sparkle-135" viewBox="0 0 24 24" fill="none">
+        <path d="M12 3L13.8 8.2L19 10L13.8 11.8L12 17L10.2 11.8L5 10L10.2 8.2L12 3Z" fill="#F9F5EC"/>
+      </svg>
+      <svg class="sparkle sparkle-180" viewBox="0 0 24 24" fill="none">
+        <path d="M12 3L13.8 8.2L19 10L13.8 11.8L12 17L10.2 11.8L5 10L10.2 8.2L12 3Z" fill="#F9F5EC"/>
+      </svg>
+      <svg class="sparkle sparkle-225" viewBox="0 0 24 24" fill="none">
+        <path d="M12 3L13.8 8.2L19 10L13.8 11.8L12 17L10.2 11.8L5 10L10.2 8.2L12 3Z" fill="#F9F5EC"/>
+      </svg>
+      <svg class="sparkle sparkle-270" viewBox="0 0 24 24" fill="none">
+        <path d="M12 3L13.8 8.2L19 10L13.8 11.8L12 17L10.2 11.8L5 10L10.2 8.2L12 3Z" fill="#F9F5EC"/>
+      </svg>
+      <svg class="sparkle sparkle-315" viewBox="0 0 24 24" fill="none">
+        <path d="M12 3L13.8 8.2L19 10L13.8 11.8L12 17L10.2 11.8L5 10L10.2 8.2L12 3Z" fill="#F9F5EC"/>
+      </svg>
+      <div class="sparkle-center"></div>
+    </div>`;
+  sparkleRenderer.appendChild(particle);
+  setTimeout(()=>particle.remove(),800);
+}
+document.addEventListener('click',e=>createSparkle(e.clientX,e.clientY));
 
 /* ============================================================
    NAV
